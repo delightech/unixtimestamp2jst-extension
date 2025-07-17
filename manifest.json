@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Unix Timestamp to JST Converter",
+  "version": "1.0",
+  "description": "Convert Unix timestamps to Japan Standard Time (JST)",
+  "permissions": [
+    "activeTab"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

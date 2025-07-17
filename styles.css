@@ -1,0 +1,45 @@
+.unix-timestamp-converter {
+  position: relative;
+  display: inline-block;
+  background-color: #e3f2fd;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin: 0 2px;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.unix-timestamp-converter .original-timestamp {
+  display: none;
+}
+
+.unix-timestamp-converter .jst-time {
+  color: #1976d2;
+  font-weight: 500;
+  cursor: help;
+}
+
+.unix-timestamp-converter:hover {
+  background-color: #bbdefb;
+}
+
+.unix-timestamp-converter:hover .original-timestamp {
+  display: inline;
+  color: #666;
+  font-size: 0.9em;
+  margin-right: 5px;
+}
+
+.unix-timestamp-converter:hover .jst-time::before {
+  content: "→ ";
+  color: #666;
+}
+
+/* Toggle visibility */
+body.hide-timestamps .unix-timestamp-converter {
+  display: none;
+}
+
+body.hide-timestamps .original-timestamp {
+  display: inline !important;
+}
