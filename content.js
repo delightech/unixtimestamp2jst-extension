@@ -36,6 +36,40 @@ function unixToJST(timestamp) {
 // Set to track processed nodes
 const processedNodes = new WeakSet();
 
+// Function to copy text to clipboard with visual feedback
+async function copyToClipboard(text, element, type) {
+  try {
+    await navigator.clipboard.writeText(text);
+    
+    // Show visual feedback
+    const originalText = element.textContent;
+    const originalColor = element.style.color;
+    
+    element.textContent = `✓ ${type}をコピーしました`;
+    element.style.color = '#4CAF50';
+    
+    setTimeout(() => {
+      element.textContent = originalText;
+      element.style.color = originalColor;
+    }, 1500);
+    
+  } catch (err) {
+    console.warn('クリップボードへのコピーに失敗しました:', err);
+    
+    // Fallback visual feedback for error
+    const originalText = element.textContent;
+    const originalColor = element.style.color;
+    
+    element.textContent = `✗ コピーに失敗`;
+    element.style.color = '#f44336';
+    
+    setTimeout(() => {
+      element.textContent = originalText;
+      element.style.color = originalColor;
+    }, 1500);
+  }
+}
+
 // Function to process text nodes
 function processTextNode(textNode) {
   if (processedNodes.has(textNode) || !textNode.parentNode || !showTimestamps) {
@@ -95,13 +129,27 @@ function processTextNode(textNode) {
       wrapper.setAttribute('data-original-text', matchInfo.value);
       
       const originalSpan = document.createElement('span');
-      originalSpan.className = 'original-timestamp';
+      originalSpan.className = 'original-timestamp clickable-timestamp';
       originalSpan.textContent = matchInfo.value;
+      originalSpan.setAttribute('title', 'クリックしてタイムスタンプをコピー');
+      originalSpan.setAttribute('data-timestamp', matchInfo.value);
       
       const jstSpan = document.createElement('span');
-      jstSpan.className = 'jst-time';
-      jstSpan.setAttribute('title', `Unix: ${matchInfo.value}`);
+      jstSpan.className = 'jst-time clickable-date';
+      jstSpan.setAttribute('title', 'クリックして日付をコピー');
       jstSpan.textContent = jstTime;
+      jstSpan.setAttribute('data-date', jstTime);
+      
+      // Add click handlers
+      originalSpan.addEventListener('click', (e) => {
+        e.stopPropagation();
+        copyToClipboard(matchInfo.value, originalSpan, 'タイムスタンプ');
+      });
+      
+      jstSpan.addEventListener('click', (e) => {
+        e.stopPropagation();
+        copyToClipboard(jstTime, jstSpan, '日付');
+      });
       
       wrapper.appendChild(originalSpan);
       wrapper.appendChild(jstSpan);
