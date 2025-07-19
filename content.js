@@ -151,7 +151,13 @@ function processTextNode(textNode) {
         copyToClipboard(jstTime, jstSpan, '日付');
       });
       
+      // Create arrow element
+      const arrowSpan = document.createElement('span');
+      arrowSpan.className = 'arrow';
+      arrowSpan.textContent = '→';
+      
       wrapper.appendChild(originalSpan);
+      wrapper.appendChild(arrowSpan);
       wrapper.appendChild(jstSpan);
       fragment.appendChild(wrapper);
       

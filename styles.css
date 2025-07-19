@@ -30,9 +30,14 @@
   margin-right: 5px;
 }
 
-.unix-timestamp-converter:hover .jst-time::before {
-  content: "→ ";
+.unix-timestamp-converter .arrow {
   color: #666;
+  margin: 0 5px;
+  display: none;
+}
+
+.unix-timestamp-converter:hover .arrow {
+  display: inline;
 }
 
 /* Clickable elements styling */
