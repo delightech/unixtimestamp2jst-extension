@@ -218,6 +218,18 @@ setTimeout(() => {
   walkTextNodes(document.body);
 }, 100);
 
+// Helper function to check if a node is within a timestamp wrapper
+function isWithinTimestampWrapper(node) {
+  let current = node.parentNode;
+  while (current) {
+    if (current.classList && current.classList.contains('unix-timestamp-converter')) {
+      return true;
+    }
+    current = current.parentNode;
+  }
+  return false;
+}
+
 // Observer for dynamic content
 const observer = new MutationObserver(mutations => {
   if (!showTimestamps) {
@@ -227,11 +239,25 @@ const observer = new MutationObserver(mutations => {
   for (const mutation of mutations) {
     if (mutation.type === 'childList') {
       for (const node of mutation.addedNodes) {
+        // Skip processing if the node is within an existing timestamp wrapper
+        if (isWithinTimestampWrapper(node)) {
+          continue;
+        }
+        
         if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
           processTextNode(node);
         } else if (node.nodeType === Node.ELEMENT_NODE) {
           walkTextNodes(node);
         }
+      }
+    } else if (mutation.type === 'characterData') {
+      // Skip text content changes within timestamp wrappers
+      if (isWithinTimestampWrapper(mutation.target)) {
+        continue;
+      }
+      
+      if (mutation.target.nodeType === Node.TEXT_NODE && mutation.target.textContent.trim()) {
+        processTextNode(mutation.target);
       }
     }
   }
@@ -239,7 +265,8 @@ const observer = new MutationObserver(mutations => {
 
 observer.observe(document.body, {
   childList: true,
-  subtree: true
+  subtree: true,
+  characterData: true
 });
 
 // Toggle functionality
