@@ -43,6 +43,21 @@
     .converter-section {
       border-top: 1px solid #ddd;
       padding-top: 20px;
+      margin-top: 20px;
+    }
+    .converter-section:first-of-type {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 0;
+    }
+    .datetime-selector select {
+      padding: 6px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    #convertToUnixButton:hover {
+      background-color: #1976D2;
     }
     input[type="text"] {
       width: 100%;
@@ -74,8 +89,31 @@
   </div>
   
   <div class="converter-section">
+    <h2 style="font-size: 16px; margin: 0 0 15px 0;">Unix → JST 変換</h2>
     <input type="text" id="timestampInput" placeholder="Unixタイムスタンプを入力">
     <div id="result" class="result" style="display: none;"></div>
+  </div>
+  
+  <div class="converter-section">
+    <h2 style="font-size: 16px; margin: 0 0 15px 0;">JST → Unix 変換</h2>
+    <div class="datetime-selector">
+      <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+        <select id="yearSelect" style="flex: 1;"></select>
+        <label style="align-self: center;">年</label>
+        <select id="monthSelect" style="flex: 0.7;"></select>
+        <label style="align-self: center;">月</label>
+        <select id="daySelect" style="flex: 0.7;"></select>
+        <label style="align-self: center;">日</label>
+      </div>
+      <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+        <select id="hourSelect" style="flex: 1;"></select>
+        <label style="align-self: center;">時</label>
+        <select id="minuteSelect" style="flex: 1;"></select>
+        <label style="align-self: center;">分</label>
+      </div>
+      <button id="convertToUnixButton" style="width: 100%; padding: 8px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer;">Unixタイムスタンプに変換</button>
+      <div id="jstToUnixResult" class="result" style="display: none; margin-top: 10px;"></div>
+    </div>
   </div>
   
   <div class="info">
