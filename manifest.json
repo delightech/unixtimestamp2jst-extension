@@ -4,7 +4,8 @@
   "version": "1.0",
   "description": "Convert Unix timestamps to Japan Standard Time (JST)",
   "permissions": [
-    "activeTab"
+    "activeTab",
+    "clipboardWrite"
   ],
   "content_scripts": [
     {

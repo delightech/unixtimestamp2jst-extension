@@ -36,6 +36,40 @@ function unixToJST(timestamp) {
 // Set to track processed nodes
 const processedNodes = new WeakSet();
 
+// Function to copy text to clipboard with visual feedback
+async function copyToClipboard(text, element, type) {
+  try {
+    await navigator.clipboard.writeText(text);
+    
+    // Show visual feedback
+    const originalText = element.textContent;
+    const originalColor = element.style.color;
+    
+    element.textContent = `✓ ${type}をコピーしました`;
+    element.style.color = '#4CAF50';
+    
+    setTimeout(() => {
+      element.textContent = originalText;
+      element.style.color = originalColor;
+    }, 1500);
+    
+  } catch (err) {
+    console.warn('クリップボードへのコピーに失敗しました:', err);
+    
+    // Fallback visual feedback for error
+    const originalText = element.textContent;
+    const originalColor = element.style.color;
+    
+    element.textContent = `✗ コピーに失敗`;
+    element.style.color = '#f44336';
+    
+    setTimeout(() => {
+      element.textContent = originalText;
+      element.style.color = originalColor;
+    }, 1500);
+  }
+}
+
 // Function to process text nodes
 function processTextNode(textNode) {
   if (processedNodes.has(textNode) || !textNode.parentNode || !showTimestamps) {
@@ -95,15 +129,35 @@ function processTextNode(textNode) {
       wrapper.setAttribute('data-original-text', matchInfo.value);
       
       const originalSpan = document.createElement('span');
-      originalSpan.className = 'original-timestamp';
+      originalSpan.className = 'original-timestamp clickable-timestamp';
       originalSpan.textContent = matchInfo.value;
+      originalSpan.setAttribute('title', 'クリックしてタイムスタンプをコピー');
+      originalSpan.setAttribute('data-timestamp', matchInfo.value);
       
       const jstSpan = document.createElement('span');
-      jstSpan.className = 'jst-time';
-      jstSpan.setAttribute('title', `Unix: ${matchInfo.value}`);
+      jstSpan.className = 'jst-time clickable-date';
+      jstSpan.setAttribute('title', 'クリックして日付をコピー');
       jstSpan.textContent = jstTime;
+      jstSpan.setAttribute('data-date', jstTime);
+      
+      // Add click handlers
+      originalSpan.addEventListener('click', (e) => {
+        e.stopPropagation();
+        copyToClipboard(matchInfo.value, originalSpan, 'タイムスタンプ');
+      });
+      
+      jstSpan.addEventListener('click', (e) => {
+        e.stopPropagation();
+        copyToClipboard(jstTime, jstSpan, '日付');
+      });
+      
+      // Create arrow element
+      const arrowSpan = document.createElement('span');
+      arrowSpan.className = 'arrow';
+      arrowSpan.textContent = '→';
       
       wrapper.appendChild(originalSpan);
+      wrapper.appendChild(arrowSpan);
       wrapper.appendChild(jstSpan);
       fragment.appendChild(wrapper);
       
@@ -170,6 +224,18 @@ setTimeout(() => {
   walkTextNodes(document.body);
 }, 100);
 
+// Helper function to check if a node is within a timestamp wrapper
+function isWithinTimestampWrapper(node) {
+  let current = node.parentNode;
+  while (current) {
+    if (current.classList && current.classList.contains('unix-timestamp-converter')) {
+      return true;
+    }
+    current = current.parentNode;
+  }
+  return false;
+}
+
 // Observer for dynamic content
 const observer = new MutationObserver(mutations => {
   if (!showTimestamps) {
@@ -179,11 +245,25 @@ const observer = new MutationObserver(mutations => {
   for (const mutation of mutations) {
     if (mutation.type === 'childList') {
       for (const node of mutation.addedNodes) {
+        // Skip processing if the node is within an existing timestamp wrapper
+        if (isWithinTimestampWrapper(node)) {
+          continue;
+        }
+        
         if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
           processTextNode(node);
         } else if (node.nodeType === Node.ELEMENT_NODE) {
           walkTextNodes(node);
         }
+      }
+    } else if (mutation.type === 'characterData') {
+      // Skip text content changes within timestamp wrappers
+      if (isWithinTimestampWrapper(mutation.target)) {
+        continue;
+      }
+      
+      if (mutation.target.nodeType === Node.TEXT_NODE && mutation.target.textContent.trim()) {
+        processTextNode(mutation.target);
       }
     }
   }
@@ -191,7 +271,8 @@ const observer = new MutationObserver(mutations => {
 
 observer.observe(document.body, {
   childList: true,
-  subtree: true
+  subtree: true,
+  characterData: true
 });
 
 // Toggle functionality
