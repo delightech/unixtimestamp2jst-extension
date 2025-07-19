@@ -4,6 +4,9 @@ const timestampPatterns = [
   /\b1[0-9]{12}\b/g     // 13-digit timestamps (milliseconds)
 ];
 
+// Global state for timestamp display
+let showTimestamps = true;
+
 // Function to convert Unix timestamp to JST
 function unixToJST(timestamp) {
   let date;
@@ -35,7 +38,7 @@ const processedNodes = new WeakSet();
 
 // Function to process text nodes
 function processTextNode(textNode) {
-  if (processedNodes.has(textNode) || !textNode.parentNode) {
+  if (processedNodes.has(textNode) || !textNode.parentNode || !showTimestamps) {
     return;
   }
   
@@ -89,6 +92,7 @@ function processTextNode(textNode) {
       // Create timestamp element
       const wrapper = document.createElement('span');
       wrapper.className = 'unix-timestamp-converter';
+      wrapper.setAttribute('data-original-text', matchInfo.value);
       
       const originalSpan = document.createElement('span');
       originalSpan.className = 'original-timestamp';
@@ -123,6 +127,10 @@ function processTextNode(textNode) {
 
 // Function to walk through all text nodes
 function walkTextNodes(node) {
+  if (!showTimestamps) {
+    return;
+  }
+  
   if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
     processTextNode(node);
   } else if (node.nodeType === Node.ELEMENT_NODE) {
@@ -140,6 +148,23 @@ function walkTextNodes(node) {
   }
 }
 
+// Function to restore original content
+function restoreOriginalContent() {
+  const wrappers = document.querySelectorAll('.unix-timestamp-converter');
+  wrappers.forEach(wrapper => {
+    const originalText = wrapper.getAttribute('data-original-text');
+    if (originalText && wrapper.parentNode) {
+      const textNode = document.createTextNode(originalText);
+      wrapper.parentNode.replaceChild(textNode, wrapper);
+    }
+  });
+  // Clear processed nodes since we're starting fresh
+  processedNodes.clear?.() || (function() {
+    // WeakSet doesn't have clear method in older browsers, but that's OK
+    // since we're replacing elements anyway
+  })();
+}
+
 // Initial conversion with delay to ensure DOM is ready
 setTimeout(() => {
   walkTextNodes(document.body);
@@ -147,6 +172,10 @@ setTimeout(() => {
 
 // Observer for dynamic content
 const observer = new MutationObserver(mutations => {
+  if (!showTimestamps) {
+    return;
+  }
+  
   for (const mutation of mutations) {
     if (mutation.type === 'childList') {
       for (const node of mutation.addedNodes) {
@@ -166,11 +195,18 @@ observer.observe(document.body, {
 });
 
 // Toggle functionality
-let showTimestamps = true;
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'toggle') {
     showTimestamps = !showTimestamps;
-    document.body.classList.toggle('hide-timestamps', !showTimestamps);
+    
+    if (showTimestamps) {
+      // When turning ON: re-process all content to convert timestamps
+      walkTextNodes(document.body);
+    } else {
+      // When turning OFF: restore original content
+      restoreOriginalContent();
+    }
+    
     sendResponse({status: showTimestamps});
   }
   return true;
