@@ -15,7 +15,7 @@ Thumbs.db
 *~
 
 # Generated icons (if you generate them)
-icon*.png
+#icon*.png
 
 # Package files
 *.crx

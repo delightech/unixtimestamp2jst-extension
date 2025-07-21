@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .icon-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+        }
+        .size-label {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chrome Extension Icon Generator</h1>
+    <p>Click on each canvas to download the icon</p>
+    
+    <div class="icon-container">
+        <div>
+            <canvas id="icon16" width="16" height="16"></canvas>
+            <div class="size-label">16x16</div>
+        </div>
+        <div>
+            <canvas id="icon48" width="48" height="48"></canvas>
+            <div class="size-label">48x48</div>
+        </div>
+        <div>
+            <canvas id="icon128" width="128" height="128"></canvas>
+            <div class="size-label">128x128</div>
+        </div>
+    </div>
+
+    <script>
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient - darker blue
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#1565C0');
+            gradient.addColorStop(1, '#0D47A1');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // White background for JST text area
+            if (size >= 48) {
+                ctx.fillStyle = 'white';
+                const textHeight = size / 4;
+                ctx.fillRect(0, size - textHeight, size, textHeight);
+            }
+            
+            // Clock circle
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = Math.max(2, size / 12);
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2 - (size >= 48 ? size / 12 : 0), size / 3, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Clock hands
+            ctx.lineWidth = Math.max(2, size / 16);
+            const centerY = size / 2 - (size >= 48 ? size / 12 : 0);
+            
+            // Minute hand (long) - pointing to 12
+            ctx.beginPath();
+            ctx.moveTo(size / 2, centerY);
+            ctx.lineTo(size / 2, centerY - size / 4);
+            ctx.stroke();
+            
+            // Hour hand (short) - pointing to 3
+            ctx.beginPath();
+            ctx.moveTo(size / 2, centerY);
+            ctx.lineTo(size / 2 + size / 5, centerY);
+            ctx.stroke();
+            
+            // Center dot
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(size / 2, centerY, size / 20, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Add "JST" text for larger icons
+            if (size >= 48) {
+                ctx.fillStyle = '#0D47A1';
+                ctx.font = `bold ${size / 5}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('JST', size / 2, size - size / 8);
+            }
+        }
+        
+        function downloadIcon(canvas, filename) {
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        // Draw all icons
+        const icon16 = document.getElementById('icon16');
+        const icon48 = document.getElementById('icon48');
+        const icon128 = document.getElementById('icon128');
+        
+        drawIcon(icon16, 16);
+        drawIcon(icon48, 48);
+        drawIcon(icon128, 128);
+        
+        // Add click handlers
+        icon16.addEventListener('click', () => downloadIcon(icon16, 'icon-16.png'));
+        icon48.addEventListener('click', () => downloadIcon(icon48, 'icon-48.png'));
+        icon128.addEventListener('click', () => downloadIcon(icon128, 'icon-128.png'));
+    </script>
+</body>
+</html>
